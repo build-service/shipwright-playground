@@ -27,7 +27,7 @@ type DockerConfigJSON struct {
 type DockerConfig map[string]DockerConfigEntry
 
 type cluster struct {
-	KubeConfigContents string
+	KubeConfigContents []byte
 	Expires            time.Time
 
 	Index int // The index of the item in the heap.

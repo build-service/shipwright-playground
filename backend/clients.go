@@ -3,6 +3,7 @@ package main
 import (
 	"container/heap"
 	"fmt"
+	"log"
 
 	shipwrightClient "github.com/shipwright-io/build/pkg/client/clientset/versioned"
 	"k8s.io/client-go/discovery"
@@ -24,9 +25,9 @@ func getNewClusterRestConfig() (*rest.Config, error) {
 	var newClusterRestConfig *rest.Config
 	for len(clusterPool) > 0 {
 		newCluster := heap.Pop(&clusterPool).(*cluster)
-		newClusterRestConfig, err := getRestConfigFromBytes([]byte(newCluster.KubeConfigContents))
+		newClusterRestConfig, err := getRestConfigFromBytes(newCluster.KubeConfigContents)
 		if err != nil {
-			fmt.Errorf("error retrieving new cluster rest config: %v, Trying different cluster", err.Error())
+			log.Printf("error retrieving new cluster rest config: %v, Trying different cluster", err.Error())
 			continue
 		} else if newClusterRestConfig != nil {
 			currentClusterRestConfig = newClusterRestConfig
