@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"io"
@@ -9,6 +10,7 @@ import (
 	shipwright "github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
 
 	goyaml "github.com/go-yaml/yaml"
 )
@@ -77,4 +79,14 @@ func SplitYAML(resources []byte) ([][]byte, error) {
 		res = append(res, valueBytes)
 	}
 	return res, nil
+}
+
+func testClusterConnection(k8sClient *kubernetes.Clientset) (bool, error) {
+	_, err := k8sClient.CoreV1().Pods("").List(context.TODO(), v1.ListOptions{})
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+
 }

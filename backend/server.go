@@ -48,8 +48,8 @@ func buildRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	k8sClient, _ := getk8sClient(currentClusterRestConfig)
-	_, err := k8sClient.CoreV1().Pods("").List(context.TODO(), v1.ListOptions{})
-	if err != nil {
+	ok, err := testClusterConnection(k8sClient)
+	if !ok {
 		_, err := getNewClusterRestConfig()
 		if err != nil {
 			fmt.Fprintf(w, "Unable to establish connection with an active cluster: %v", err)
@@ -59,6 +59,7 @@ func buildRequestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	buildClient, _ := getShipwrightClient(currentClusterRestConfig)
+	applyManifestsToCluster(manifestURLs, currentClusterRestConfig)
 
 	if _, err := k8sClient.CoreV1().Secrets("default").Get(context.TODO(), secretName, v1.GetOptions{}); err == nil {
 		err := k8sClient.CoreV1().Secrets("default").Delete(context.TODO(), secretName, v1.DeleteOptions{})
