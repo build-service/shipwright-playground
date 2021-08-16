@@ -8,14 +8,14 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func createDockerSecret(username, password, email, server string) (*corev1.Secret, error) {
+func createImageRegistrySecret(username, password, email, server string) (*corev1.Secret, error) {
 
 	dockerConfigJSONContent, err := handleDockerCfgJSONContent(username, password, email, server)
 	if err != nil {
 		return nil, fmt.Errorf("error creating docker config json content : %v", err)
 	}
 
-	dockerSecret := &corev1.Secret{
+	imageRegistrySecret := &corev1.Secret{
 		TypeMeta:   TypeMeta("Secret", "v1"),
 		ObjectMeta: ObjectMeta(types.NamespacedName{Namespace: "default", Name: secretName}),
 		Type:       corev1.SecretTypeDockerConfigJson,
@@ -24,10 +24,15 @@ func createDockerSecret(username, password, email, server string) (*corev1.Secre
 		},
 	}
 
-	return dockerSecret, nil
+	return imageRegistrySecret, nil
 }
 
-func createBuild(imageRegistry, repoURL, username, repoName, secretName, contextDir string) *shipwright.Build {
+func createBuild(imageRegistryServer, gitHubOrg, repoURL, imageRegistryOrg, repoName, secretName, contextDir string) (*shipwright.Build, error) {
+
+	imageName, err := generateUniqueImageName(imageRegistryServer, imageRegistryOrg, gitHubOrg, repoName)
+	if err != nil {
+		return nil, fmt.Errorf("Error generating UUID for image tag: %v", err)
+	}
 
 	build := &shipwright.Build{
 		TypeMeta:   TypeMeta("Build", "shipwright.io/v1alpha1"),
@@ -42,7 +47,7 @@ func createBuild(imageRegistry, repoURL, username, repoName, secretName, context
 				Kind: &strategyKind,
 			},
 			Output: shipwright.Image{
-				Image: fmt.Sprintf("%s.io/%s/%v:latest", imageRegistry, username, repoName),
+				Image: imageName,
 				Credentials: &corev1.LocalObjectReference{
 					Name: secretName,
 				},
@@ -50,7 +55,7 @@ func createBuild(imageRegistry, repoURL, username, repoName, secretName, context
 		},
 	}
 
-	return build
+	return build, nil
 }
 
 func createBuildRun(repoName string) *shipwright.BuildRun {
