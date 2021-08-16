@@ -135,7 +135,7 @@ func clusterAdditionHandler(w http.ResponseWriter, r *http.Request) {
 		Expires:            time.Now().Add(time.Hour * time.Duration(expires)),
 	}
 
-	heap.Push(&clusterPool, newCluster)
+	heap.Push(&clusterPool, &newCluster)
 
 	fmt.Fprintf(w, "New Cluster added successfully!")
 }
