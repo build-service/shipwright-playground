@@ -9,11 +9,13 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/discovery/cached/memory"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 )
@@ -107,4 +109,27 @@ func applyManifestsToCluster(manifestYAMLURLs []string, restConfig *rest.Config)
 
 	return nil
 
+}
+
+func prepareCluster(k8sClient *kubernetes.Clientset) error {
+
+	err := applyManifestsToCluster(manifestURLs, currentClusterRestConfig)
+	if err != nil {
+		return fmt.Errorf(" Aplication of required manifests failed: %v", err)
+	}
+
+	if _, err := k8sClient.CoreV1().Secrets("default").Get(context.TODO(), secretName, v1.GetOptions{}); err == nil {
+		err := k8sClient.CoreV1().Secrets("default").Delete(context.TODO(), secretName, v1.DeleteOptions{})
+		if err != nil {
+			return fmt.Errorf("Could not delete existing secret of same name: %v", err)
+		}
+	}
+	imageRegistrySecret, err := createImageRegistrySecret(username, password, email, quayServer)
+	_, err = k8sClient.CoreV1().Secrets("default").Create(context.TODO(), imageRegistrySecret, v1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("Could not create secret: %v", err)
+
+	}
+
+	return nil
 }

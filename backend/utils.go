@@ -5,8 +5,11 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
+	"strings"
 
+	"github.com/google/uuid"
 	shipwright "github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -89,4 +92,20 @@ func testClusterConnection(k8sClient *kubernetes.Clientset) (bool, error) {
 
 	return true, nil
 
+}
+
+func generateUniqueImageName(quayServer, imageRegistryOrg, gitHubOrg, repoName string) (string, error) {
+	uniqueID, err := uuid.NewRandom()
+	if err != nil {
+		return "", fmt.Errorf("Could not generate UUID: %v", err)
+	}
+
+	imageName := fmt.Sprintf("%v/%v/%s-%s:%v", quayServer, imageRegistryOrg, gitHubOrg, repoName, uniqueID)
+	return imageName, nil
+
+}
+
+func parseGitRepoURL(repoURL string) (string, string) {
+	components := strings.Split(repoURL, "/")
+	return components[len(components)-2], components[len(components)-1]
 }

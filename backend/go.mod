@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/go-yaml/yaml v2.1.0+incompatible
+	github.com/google/uuid v1.1.2
 	github.com/shipwright-io/build v0.5.1
 	k8s.io/api v0.21.3
 	k8s.io/apimachinery v0.21.3

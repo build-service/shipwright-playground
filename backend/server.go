@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	shipwright "github.com/shipwright-io/build/pkg/apis/build/v1alpha1"
@@ -18,13 +17,18 @@ import (
 )
 
 var (
-	dockerServer        = "https://index.docker.io/v1/"
-	quayServer          = "quay.io"
-	secretName          = "image-registry-secret"
-	contextDir          string
-	imageRegistryServer string
-	serverPort          = 8085
-	clusterPool         PriorityQueue
+	contextDir  string
+	clusterPool PriorityQueue
+)
+
+const (
+	username         = "jrao"
+	password         = "Quayjrao1!"
+	quayServer       = "quay.io"
+	email            = "jrao@redhat.com"
+	secretName       = "image-registry-secret"
+	serverPort       = 8085
+	imageRegistryOrg = "shipwrightplayground"
 )
 
 func buildRequestHandler(w http.ResponseWriter, r *http.Request) {
@@ -33,58 +37,42 @@ func buildRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	imageRegistry := r.FormValue("image-registry")
-	username := r.FormValue("username")
-	password := r.FormValue("password")
-	email := r.FormValue("email")
 	repoURL := r.FormValue("repo-url")
 	contextDir = r.FormValue("context-dir")
-	repoName := repoURL[strings.LastIndex(repoURL, "/")+1:]
-
-	if imageRegistry == "docker" {
-		imageRegistryServer = dockerServer
-	} else {
-		imageRegistryServer = quayServer
-	}
+	gitHubOrg, repoName := parseGitRepoURL(repoURL)
 
 	k8sClient, _ := getk8sClient(currentClusterRestConfig)
 	ok, err := testClusterConnection(k8sClient)
-	if !ok {
+	if !ok || k8sClient == nil {
 		_, err := getNewClusterRestConfig()
 		if err != nil {
 			fmt.Fprintf(w, "Unable to establish connection with an active cluster: %v", err)
 			log.Fatalf("Unable to establish connection with an active cluster: %v", err)
-		} else {
-			k8sClient, _ = getk8sClient(currentClusterRestConfig)
 		}
 	}
+
+	k8sClient, _ = getk8sClient(currentClusterRestConfig)
 	buildClient, _ := getShipwrightClient(currentClusterRestConfig)
-	applyManifestsToCluster(manifestURLs, currentClusterRestConfig)
-
-	if _, err := k8sClient.CoreV1().Secrets("default").Get(context.TODO(), secretName, v1.GetOptions{}); err == nil {
-		err := k8sClient.CoreV1().Secrets("default").Delete(context.TODO(), secretName, v1.DeleteOptions{})
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-	dockerSecret, err := createDockerSecret(username, password, email, imageRegistryServer)
-	_, err = k8sClient.CoreV1().Secrets("default").Create(context.TODO(), dockerSecret, v1.CreateOptions{})
+	err = prepareCluster(k8sClient)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintf(w, "Error preparing cluster with pre-requisite resources: %v", err)
+		log.Fatalf("Error preparing cluster with pre-requisite resources: %v", err)
 	}
 
+	// Create Build on cluster
 	if _, err := buildClient.ShipwrightV1alpha1().Builds("default").Get(context.TODO(), fmt.Sprintf("%v-build", repoName), v1.GetOptions{}); err == nil {
 		err := buildClient.ShipwrightV1alpha1().Builds("default").Delete(context.TODO(), fmt.Sprintf("%v-build", repoName), v1.DeleteOptions{})
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
-	buildObj := createBuild(imageRegistry, repoURL, username, repoName, secretName, contextDir)
+	buildObj, err := createBuild(quayServer, gitHubOrg, repoURL, imageRegistryOrg, repoName, secretName, contextDir)
 	_, err = buildClient.ShipwrightV1alpha1().Builds("default").Create(context.TODO(), buildObj, v1.CreateOptions{})
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// Create BuildRun on cluster
 	if _, err := buildClient.ShipwrightV1alpha1().BuildRuns("default").Get(context.TODO(), fmt.Sprintf("%v-buildrun", repoName), v1.GetOptions{}); err == nil {
 		err := buildClient.ShipwrightV1alpha1().BuildRuns("default").Delete(context.TODO(), fmt.Sprintf("%v-buildrun", repoName), v1.DeleteOptions{})
 		if err != nil {
@@ -155,16 +143,6 @@ func clusterAdditionHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 
 	instantiateClusterPool()
-
-	newClusterRestConfig, err := getNewClusterRestConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = applyManifestsToCluster(manifestURLs, newClusterRestConfig)
-	if err != nil {
-		log.Fatalf(" Aplication of required manifests failed: %v", err)
-	}
 
 	http.HandleFunc("/request-build", buildRequestHandler)
 	http.HandleFunc("/add-cluster", clusterAdditionHandler)
