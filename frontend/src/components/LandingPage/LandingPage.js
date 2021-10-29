@@ -1,10 +1,18 @@
 import React from 'react';
 import background from '../../assets/images/shipit.jpg';
 import { NavBar } from '../NavBar/NavBar.js';
+import './LandingPage.css'
 
 export const LandingPage = () => (
-  <div className="x">
+  <>
     <NavBar />
-    <img src={background} alt="a container ship at sea" />
-  </div>
+    <img src={background} className="background" alt="a container ship at sea" />
+    <div className="float">
+      <div className="blurb">A super catchy sentence that will capture your Attention. <br/>The Future of Building. </div>
+    </div>
+    <div className="float">
+      <button className="start-button">Get Started</button>
+    </div>
+    <div className="image-credit">Image Courtesy of Martin Dörsch, stocksnap.io</div>
+  </>
 )
