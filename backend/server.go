@@ -1,14 +1,18 @@
 package main
 
 import (
+	"container/heap"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 
 	uuid "github.com/nu7hatch/gouuid"
 	buildClient "github.com/shipwright-io/build/pkg/client/clientset/versioned"
@@ -29,6 +33,8 @@ var (
 	buildSystemNamespace  = "shipwright-tenant"
 	config                *rest.Config
 	shipwrightBuildClient *buildClient.Clientset
+
+	clusterPool PriorityQueue
 )
 
 func initializeClient() {
@@ -166,13 +172,47 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func clusterAdditionHandler(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		fmt.Fprintf(w, "ParseForm() err: %v", err)
+		return
+	}
+
+	kubeConfigURL := r.FormValue("kubeconfigURL")
+	expirationHours := r.FormValue("expires")
+	expires, _ := strconv.Atoi(expirationHours)
+
+	kubeConfigFile, err := http.Get(kubeConfigURL)
+	if err != nil {
+		fmt.Printf("Unable to retrieve manifest from URL: %v", err)
+	}
+	defer kubeConfigFile.Body.Close()
+
+	kubeConfigBytes, err := ioutil.ReadAll(kubeConfigFile.Body)
+	if err != nil {
+		fmt.Printf("Unable to retrieve manifest bytes: %v", err)
+	}
+
+	newCluster := cluster{
+		KubeConfigContents: kubeConfigBytes,
+		Expires:            time.Now().Add(time.Hour * time.Duration(expires)),
+	}
+
+	heap.Push(&clusterPool, &newCluster)
+
+	fmt.Fprintf(w, "New Cluster added successfully!")
+}
+
 func main() {
+
+	instantiateClusterPool()
 
 	fileServer := http.FileServer(http.Dir("./static"))
 	http.Handle("/", fileServer)
 	http.HandleFunc("/build", formHandler)
 	http.HandleFunc("/buildstatus", buildStatusHandler)
 	http.HandleFunc("/buildstrategies", listBuildStrategies)
+	http.HandleFunc("/cluster", clusterAdditionHandler)
 
 	fmt.Printf("Starting server at port %d\n", serverPort)
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", serverPort), nil); err != nil {

@@ -1,6 +1,10 @@
 package main
 
-import v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	"time"
+
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 type objectMetaFunc func(om *v1.ObjectMeta)
 
@@ -21,3 +25,13 @@ type DockerConfigJSON struct {
 // This config that represents the credentials that should be used
 // when pulling images from specific image repositories.
 type DockerConfig map[string]DockerConfigEntry
+
+type cluster struct {
+	KubeConfigContents []byte
+	Expires            time.Time
+
+	Index int // The index of the item in the heap.
+}
+
+// Priority queue that serves as cluster pool
+type PriorityQueue []*cluster
