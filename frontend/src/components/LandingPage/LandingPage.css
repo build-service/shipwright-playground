@@ -1,0 +1,50 @@
+.background {
+  filter: brightness(85%);
+  min-height: 100%;
+  min-width: 1024px;
+  width: 100%;
+  height: auto;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+}
+
+.float {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.blurb {
+  color: #FFF;
+  font-family: 'Red Hat Display', sans-serif;
+  font-size: 4rem;
+  height: 50%;
+  margin: 5.5rem 5.5rem 0rem 0rem;
+  text-align: right;
+  width: 50%;
+}
+
+.start-button {
+  align-items: center;
+  background: #FFF;
+  box-shadow: 0px 4px 4px rgba(40, 56, 75, 0.25);
+  border: 1px solid #28384b;
+  border-radius: 200px;
+  font-family: 'Red Hat Display', sans-serif;
+  font-size: 2rem;
+  height: 84px;
+  margin: 4rem 5.5rem 5.5rem 5.5rem;
+  padding: 4px 16px 4px 16px;
+  width: 25%;
+}
+
+.image-credit {
+  color: #FFF;
+  font-family: 'Red Hat Display', sans-serif;
+  font-size: 1rem;
+  margin: 20px;
+  position: fixed;
+  bottom: 0;
+  left:0;
+}
