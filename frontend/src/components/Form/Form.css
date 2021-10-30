@@ -1,0 +1,16 @@
+.build-form {
+  font-family: 'Red Hat Display', sans-serif;
+  margin: 4rem;
+}
+
+.build-form-header{
+  padding: 10px;
+}
+
+.build-form-input {
+  padding: 10px;
+}
+
+.build-form-submit{
+  padding: 10px;
+}
