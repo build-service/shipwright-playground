@@ -7,7 +7,7 @@ export const NavBar = () => (
   <div className="navbar container">
     <img src={logo} className="logo" alt="Shipwright logo" />
     <div className="navlinks">
-      <a href="/">How It Works</a>
+      <a href="#how-it-works">How It Works</a>
       <a href="https://github.com/shipwright-io/build">
           GitHub
           <span className="icon"><FaGithub /></span>
