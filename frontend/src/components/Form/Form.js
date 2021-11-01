@@ -22,7 +22,7 @@ const BuildForm = () => {
   }
 
   return (
-    <div className="container">
+    <>
       <NavBar />
       <Form form={form} name="dynamic_rule" className="build-form">
         <PageHeader 
@@ -98,7 +98,7 @@ const BuildForm = () => {
           </Button>
         </Form.Item>
       </Form>
-    </div>
+    </>
   );
 };
 
