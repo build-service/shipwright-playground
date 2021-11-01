@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory } from "react-router-dom";
 import { Form, Input, Button, Checkbox, PageHeader } from 'antd';
+import { NavBar } from '../NavBar/NavBar.js';
 import './Form.css'
 
 const BuildForm = () => {
@@ -21,80 +22,83 @@ const BuildForm = () => {
   }
 
   return (
-    <Form form={form} name="dynamic_rule" className="build-form">
-      <PageHeader 
-        title="Build Form"
-        className="build-form-header"
-        onBack={handleRoute}
-        // subTitle="TBD"
-      />
-      <Form.Item
-        name="gitRepo"
-        label="Git Repository"
-        className="build-form-input"
-        rules={[
-          {
-            required: true,
-            message: 'This is a required field',
-          },
-        ]}
-      >
-        <Input placeholder="Please input the git directory where your project is located" />
-      </Form.Item>
-      <Form.Item
-        name="contextDirectory"
-        label="Context Directory"
-        className="build-form-input"
-        rules={[
-          {
-            required: false,
-          },
-        ]}
-      >
-        <Input placeholder="Please input your context directory" />
-      </Form.Item>
-      <Form.Item
-        name="buildStrategy"
-        label="Build Strategy"
-        className="build-form-input"
-        rules={[
-          {
-            required: false,
-          },
-        ]}
-      >
-        <Input placeholder="Please choose which build strategy you want to use" />
-      </Form.Item>
-      <Form.Item
-        name="dockerfilePath"
-        label="Dockerfile Path"
-        className="build-form-input"
-        rules={[
-          {
-            required: false,
-          },
-        ]}
-      >
-        <Input placeholder="Please input your context directory" />
-      </Form.Item>
-      <Form.Item
-        name="builderImage"
-        label="Builder Image"
-        className="build-form-input"
-        rules={[
-          {
-            required: false,
-          },
-        ]}
-      >
-        <Input placeholder="Please input your builder image" />
-      </Form.Item>
-      <Form.Item>
-        <Button type="primary" className="build-form-submit">
-          Build
-        </Button>
-      </Form.Item>
-    </Form>
+    <div className="container">
+      <NavBar />
+      <Form form={form} name="dynamic_rule" className="build-form">
+        <PageHeader 
+          title="Build Form"
+          className="build-form-header"
+          onBack={handleRoute}
+          // subTitle="TBD"
+        />
+        <Form.Item
+          name="gitRepo"
+          label="Git Repository"
+          className="build-form-input"
+          rules={[
+            {
+              required: true,
+              message: 'This is a required field',
+            },
+          ]}
+        >
+          <Input placeholder="Link to git repository" />
+        </Form.Item>
+        <Form.Item
+          name="contextDirectory"
+          label="Context Directory"
+          className="build-form-input"
+          rules={[
+            {
+              required: false,
+            },
+          ]}
+        >
+          <Input placeholder="Defaults to root" />
+        </Form.Item>
+        <Form.Item
+          name="buildStrategy"
+          label="Build Strategy"
+          className="build-form-input"
+          rules={[
+            {
+              required: false,
+            },
+          ]}
+        >
+          <Input placeholder="Select a Build Strategy" />
+        </Form.Item>
+        <Form.Item
+          name="dockerfilePath"
+          label="Dockerfile Path"
+          className="build-form-input"
+          rules={[
+            {
+              required: false,
+            },
+          ]}
+        >
+          <Input placeholder="Defaults to /Dockerfile" />
+        </Form.Item>
+        <Form.Item
+          name="builderImage"
+          label="Builder Image"
+          className="build-form-input"
+          rules={[
+            {
+              required: false,
+            },
+          ]}
+        >
+          <Input placeholder="Link to builder image" />
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" className="build-form-submit">
+            Build
+          </Button>
+        </Form.Item>
+      </Form>
+    </div>
   );
 };
 
